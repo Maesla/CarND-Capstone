@@ -35,11 +35,26 @@ class WaypointUpdater(object):
 
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
+        
+        rospy.loginfo('Hola que pasa')
 
         # TODO: Add other member variables you need below
+        self.update()
+                
+    def update(self):
+		rate = rospy.Rate(10) # 10hz
+		while not rospy.is_shutdown():
+			lane = Lane()
+			for i in range(LOOKAHEAD_WPS):
+				waypoint = Waypoint()
+				waypoint.pose.pose.position.x = i*10
+				waypoint.twist.twist.linear.x = 10
+				lane.waypoints.append(waypoint)
+			
+			self.final_waypoints_pub.publish(lane)
+			rate.sleep()
 
-        rospy.spin()
-
+        #rospy.spin()
     def pose_cb(self, msg):
         # TODO: Implement
         pass
