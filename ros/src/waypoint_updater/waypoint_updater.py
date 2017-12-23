@@ -5,6 +5,7 @@ from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
 
 import math
+import tf
 
 '''
 This node will publish waypoints from the car's current position to some `x` distance ahead.
@@ -37,16 +38,20 @@ class WaypointUpdater(object):
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
         
         # TODO: Add other member variables you need below
+        
+        self.yaw = 0
         self.update()
                 
     def update(self):
 		rate = rospy.Rate(10) # 10hz
 		while not rospy.is_shutdown():
+			
 			lane = Lane()
+			#index_closest_waypoint = self.get_closest_waypoint()
 			for i in range(LOOKAHEAD_WPS):
 				waypoint = Waypoint()
 				waypoint.pose.pose.position.x = i*10
-				waypoint.twist.twist.linear.x = 10
+				waypoint.twist.twist.linear.x = 20
 				lane.waypoints.append(waypoint)
 			
 			self.final_waypoints_pub.publish(lane)
@@ -54,13 +59,31 @@ class WaypointUpdater(object):
 
         #rospy.spin()
     def pose_cb(self, msg):
-        # TODO: Implement
-        pass
-
+		self.current_pose = msg
+		orientation = msg.pose.orientation
+		
+		quaternion = (orientation.x, orientation.y, orientation.z, orientation.w)
+		euler = tf.transformations.euler_from_quaternion(quaternion)
+		roll = euler[0]
+		pitch = euler[1]
+		self.yaw = euler[2]
+		
+	#placeholder
+    def get_closest_waypoint(self):
+		waypoints_in_local = self.transform_waypoints_to_local_coordinates()
+		return 0
+	
+	#placeholder
+    def transform_waypoints_to_local_coordinates(self):
+		local_waypoints = []
+		for global_waypoint in self.waypoints:
+			local_waypoints.append(global_waypoint)
+		return local_waypoints
+		
+		
     def waypoints_cb(self, waypoints):
-        # TODO: Implement
-        pass
-
+		self.waypoints = waypoints
+ 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
         pass
