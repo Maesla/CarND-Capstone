@@ -36,8 +36,6 @@ class WaypointUpdater(object):
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
         
-        rospy.loginfo('Hola que pasa')
-
         # TODO: Add other member variables you need below
         self.update()
                 
