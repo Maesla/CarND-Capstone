@@ -52,12 +52,24 @@ class DBWNode(object):
                                             ThrottleCmd, queue_size=1)
         self.brake_pub = rospy.Publisher('/vehicle/brake_cmd',
                                          BrakeCmd, queue_size=1)
+                                         
+                                         
+        rospy.Subscriber('/current_velocity', TwistStamped, self.current_velocity_cb)
+        rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cmd_cb)
+        rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_cb)
+
+
 
         # TODO: Create `TwistController` object
         # self.controller = TwistController(<Arguments you wish to provide>)
-
+        self.controller = Controller()
         # TODO: Subscribe to all the topics you need to
 
+        self.current_speed = None
+        self.current_yaw = None
+        self.target_speed = None
+        self.target_yaw = None
+        self.dbw_enabled = None
         self.loop()
 
     def loop(self):
@@ -71,15 +83,23 @@ class DBWNode(object):
             #                                                     <dbw status>,
             #                                                     <any other argument you need>)
             
-            #placeholders
-            dbw_enabled = True # TODO, get this param from simulator
             throttle = 0.5
             brake = 0.0
             steer = 0.0;
-            if dbw_enabled:
+            # TODO, get this param from simulator, reset when  false
+            if self.dbw_enabled:
+				throttle, brake, steer = self.calculate_values()
 				self.publish(throttle, brake, steer)
             rate.sleep()
 
+
+    def calculate_values(self):
+		cte_speed = self.current_speed - self.target_speed
+		cte_yaw = self.target_yaw - self.current_yaw
+		
+		return self.controller.control(cte_speed, cte_yaw)
+		
+		
     def publish(self, throttle, brake, steer):
         tcmd = ThrottleCmd()
         tcmd.enable = True
@@ -98,6 +118,16 @@ class DBWNode(object):
         bcmd.pedal_cmd = brake
         self.brake_pub.publish(bcmd)
 
+    def current_velocity_cb(self, msg):
+		self.current_speed = msg.twist.linear.x
+		self.current_yaw = msg.twist.angular.z
+		
+    def twist_cmd_cb(self, msg):
+        self.target_speed = msg.twist.linear.x
+        self.target_yaw = msg.twist.angular.z
+		
+    def dbw_enabled_cb(self, msg):
+		self.dbw_enabled = msg.data
 
 if __name__ == '__main__':
     DBWNode()
