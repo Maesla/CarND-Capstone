@@ -39,25 +39,29 @@ class WaypointUpdater(object):
         
         # TODO: Add other member variables you need below
         
-        self.yaw = 0
+        self.yaw = None
+        self.waypoints = None
         self.update()
                 
     def update(self):
 		rate = rospy.Rate(10) # 10hz
 		while not rospy.is_shutdown():
-			
-			lane = Lane()
-			#index_closest_waypoint = self.get_closest_waypoint()
-			for i in range(LOOKAHEAD_WPS):
-				waypoint = Waypoint()
-				waypoint.pose.pose.position.x = i*10
-				waypoint.twist.twist.linear.x = 20
-				lane.waypoints.append(waypoint)
-			
-			self.final_waypoints_pub.publish(lane)
+			if self.all_info_ready():
+				lane = Lane()
+				index_closest_waypoint = self.get_closest_waypoint_index()
+				for i in range(LOOKAHEAD_WPS):
+					waypoint = self.waypoints.waypoints[index_closest_waypoint+i]
+					waypoint.twist.twist.linear.x = 50 ## TODO, understand this parameter
+					lane.waypoints.append(waypoint)
+				
+				self.final_waypoints_pub.publish(lane)
 			rate.sleep()
 
         #rospy.spin()
+        
+    def all_info_ready(self):
+		return self.yaw is not None and self.waypoints is not None		
+    
     def pose_cb(self, msg):
 		self.current_pose = msg
 		orientation = msg.pose.orientation
@@ -68,17 +72,43 @@ class WaypointUpdater(object):
 		pitch = euler[1]
 		self.yaw = euler[2]
 		
-	#placeholder
-    def get_closest_waypoint(self):
+    def get_closest_waypoint_index(self):
 		waypoints_in_local = self.transform_waypoints_to_local_coordinates()
-		return 0
+		index = -1
+		min_distance = 1e100
+		for i in range(len(waypoints_in_local)):
+			x_local = waypoints_in_local[i][0]
+			y_local = waypoints_in_local[i][1]
+			if (x_local > 0): #is ahead
+				dist = x_local*x_local + y_local*y_local #squared length is enough, only for comparing
+				if (dist < min_distance):
+					min_distance = dist
+					index = i
+		
+		return index
 	
-	#placeholder
     def transform_waypoints_to_local_coordinates(self):
 		local_waypoints = []
-		for global_waypoint in self.waypoints:
-			local_waypoints.append(global_waypoint)
+		for global_waypoint in self.waypoints.waypoints:
+			x_global = global_waypoint.pose.pose.position.x
+			y_global = global_waypoint.pose.pose.position.y
+			
+			x_local, y_local = self.trasform_coordinates_to_local(x_global, y_global)
+			
+			local_waypoints.append((x_local, y_local))
 		return local_waypoints
+    
+    def trasform_coordinates_to_local(self, x_global, y_global):
+		x_vehicle = self.current_pose.pose.position.x
+		y_vehicle = self.current_pose.pose.position.y
+		yaw = self.yaw
+		
+		x_local_temp = x_global - x_vehicle
+		y_local_temp = y_global - y_vehicle
+		
+		x_local = math.cos(yaw)*x_local_temp + math.sin(yaw)*y_local_temp
+		y_local = -math.sin(yaw)*x_local_temp + math.cos(yaw)*y_local_temp
+		return x_local, y_local
 		
 		
     def waypoints_cb(self, waypoints):
