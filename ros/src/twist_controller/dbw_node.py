@@ -70,8 +70,14 @@ class DBWNode(object):
             #                                                     <current linear velocity>,
             #                                                     <dbw status>,
             #                                                     <any other argument you need>)
-            # if <dbw is enabled>:
-            #   self.publish(throttle, brake, steer)
+            
+            #placeholders
+            dbw_enabled = True # TODO, get this param from simulator
+            throttle = 0.5
+            brake = 0.0
+            steer = 0.0;
+            if dbw_enabled:
+				self.publish(throttle, brake, steer)
             rate.sleep()
 
     def publish(self, throttle, brake, steer):
