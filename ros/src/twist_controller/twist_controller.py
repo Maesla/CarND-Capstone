@@ -9,7 +9,6 @@ ONE_MPH = 0.44704
 
 class Controller(object):
     def __init__(self, *args, **kwargs):
-        # TODO: Implement
         self.speed_controller = Speed_Controller()
         self.steer_controller = Steer_Controller()
 
@@ -17,7 +16,6 @@ class Controller(object):
     def control(self, cte_speed, cte_yaw):
         throttle, brake = self.speed_controller.control(cte_speed)
         steer = self.steer_controller.control(cte_yaw)
-        return throttle,0,0
         return throttle, brake, steer
     
     def reset(self):

@@ -5,7 +5,9 @@ class Speed_Controller(object):
     def __init__(self, *args, **kwargs):
         # TODO: Implement
         
-        self.pid = PID(0.0476519, -8.561e-05, 0.201947)
+        #self.pid = PID(0.0476519, -8.561e-05, 0.201947)
+        self.pid = PID(1.0, 0.0, 0.0)
+
 
     def control(self, cte_speed):
         throttle = self.pid.step(cte_speed, 1.0/50) #TODO remove 1/50 hardcode

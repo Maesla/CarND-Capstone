@@ -96,9 +96,10 @@ class DBWNode(object):
 
 
     def calculate_values(self):
-		cte_speed = self.current_speed - self.target_speed
-		cte_yaw = self.current_yaw - self.target_yaw 
+		cte_speed = self.target_speed - self.current_speed
+		cte_yaw = self.target_yaw - self.current_yaw 
 		
+		rospy.loginfo('Speed error %s', cte_speed)
 		return self.controller.control(cte_speed, cte_yaw)
 	
     def reset(self):
