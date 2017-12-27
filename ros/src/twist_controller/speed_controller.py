@@ -7,12 +7,45 @@ class Speed_Controller(object):
         
         #self.pid = PID(0.0476519, -8.561e-05, 0.201947)
         self.pid = PID(1.0, 0.0, 0.0)
-
-
+        
+        self.mass = None
+        self.fuel_capacity = None
+        self.fuel_density = None
+        self.total_mass = None
+        self.wheel_radius = None
+        self.max_deceleration = None
+        self.max_brake_torque = None
+	
+    def setup(self, m, fuel_capacity, density, wheel_radius, max_deceleration):
+        self.mass = m
+        self.fuel_capacity = fuel_capacity
+        self.fuel_density = density
+        self.total_mass = (m+fuel_capacity*density)
+        self.wheel_radius = wheel_radius
+        
+        self.max_deceleration = max_deceleration
+        
+        self.max_brake_torque = self.calculate_brake(self.total_mass, self.max_deceleration, wheel_radius)
+   
+    def calculate_brake(self, mass, acc, wheel_radius):
+        return abs(mass*acc*wheel_radius)
+        
     def control(self, cte_speed):
-        throttle = self.pid.step(cte_speed, 1.0/50) #TODO remove 1/50 hardcode
-        throttle = self.clamp(throttle, 0.0,1.0)
-        return throttle, 0.
+        dt = 1.0/50 #TODO remove 1/50 hardcode
+        
+        throttle = 0
+        brake = 0
+        if (cte_speed >= 0):
+            throttle = self.pid.step(cte_speed, dt)
+            throttle = self.clamp(throttle, 0.0,1.0)
+        else:
+			acc = cte_speed*dt
+			brake = self.calculate_brake(self.total_mass, acc, self.wheel_radius)
+			brake = self.clamp(brake, 0, self.max_brake_torque)
+        
+        
+        
+        return throttle, brake
         
     def clamp(self, value, min_value, max_value):
 		if value > max_value:

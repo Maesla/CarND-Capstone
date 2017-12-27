@@ -63,6 +63,7 @@ class DBWNode(object):
         # TODO: Create `TwistController` object
         # self.controller = TwistController(<Arguments you wish to provide>)
         self.controller = Controller()
+        self.controller.setup(vehicle_mass, fuel_capacity, wheel_radius, decel_limit) #WIP
         # TODO: Subscribe to all the topics you need to
 
         self.current_speed = None
