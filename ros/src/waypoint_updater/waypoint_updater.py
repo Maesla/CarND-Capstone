@@ -51,7 +51,7 @@ class WaypointUpdater(object):
 				index_closest_waypoint = self.get_closest_waypoint_index()
 				for i in range(LOOKAHEAD_WPS):
 					waypoint = self.waypoints.waypoints[index_closest_waypoint+i]
-					waypoint.twist.twist.linear.x = 50 ## TODO, understand this parameter
+					waypoint.twist.twist.linear.x = 13.7 ## 50 km/h ## TODO, understand this parameter
 					lane.waypoints.append(waypoint)
 				
 				self.final_waypoints_pub.publish(lane)

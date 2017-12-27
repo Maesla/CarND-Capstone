@@ -12,11 +12,14 @@ class Controller(object):
         # TODO: Implement
         self.speed_controller = Speed_Controller()
         self.steer_controller = Steer_Controller()
-        pass
 
 
     def control(self, cte_speed, cte_yaw):
         throttle, brake = self.speed_controller.control(cte_speed)
         steer = self.steer_controller.control(cte_yaw)
-        return 0.5,0,0
+        return throttle,0,0
         return throttle, brake, steer
+    
+    def reset(self):
+        self.speed_controller.reset()
+        self.steer_controller.reset()

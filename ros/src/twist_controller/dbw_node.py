@@ -90,15 +90,19 @@ class DBWNode(object):
             if self.dbw_enabled:
 				throttle, brake, steer = self.calculate_values()
 				self.publish(throttle, brake, steer)
+            else:
+				self.reset()
             rate.sleep()
 
 
     def calculate_values(self):
 		cte_speed = self.current_speed - self.target_speed
-		cte_yaw = self.target_yaw - self.current_yaw
+		cte_yaw = self.current_yaw - self.target_yaw 
 		
 		return self.controller.control(cte_speed, cte_yaw)
-		
+	
+    def reset(self):
+		self.controller.reset()
 		
     def publish(self, throttle, brake, steer):
         tcmd = ThrottleCmd()

@@ -12,3 +12,6 @@ class Steer_Controller(object):
         steer = self.pid.step(cte_yaw, 1.0/50) #TODO remove 1/50 hardcode
         
         return steer
+        
+    def reset(self):
+		self.pid.reset()
