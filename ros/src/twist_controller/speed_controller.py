@@ -39,7 +39,7 @@ class Speed_Controller(object):
             throttle = self.pid.step(cte_speed, dt)
             throttle = self.clamp(throttle, 0.0,1.0)
         else:
-			acc = cte_speed*dt
+			acc = cte_speed/dt
 			brake = self.calculate_brake(self.total_mass, acc, self.wheel_radius)
 			brake = self.clamp(brake, 0, self.max_brake_torque)
         
