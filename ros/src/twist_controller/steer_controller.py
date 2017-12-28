@@ -1,5 +1,5 @@
 from yaw_controller import YawController
-
+from lowpass import LowPassFilter
 
 # Class representing the steering control for a SDC
 class Steer_Controller(object):
@@ -10,6 +10,7 @@ class Steer_Controller(object):
         self.max_lat_accel = None
         self.min_speed = None
         self.max_steer_angle = None
+        self.lp_fiter = LowPassFilter(3,1)
 
     # Method to set up necessary values for the steering controller
     # Defines the Yaw controller that calculates steering angle
@@ -33,7 +34,7 @@ class Steer_Controller(object):
         steer = self.yaw_controller.get_steering(linear_velocity,
                                                  angular_velocity,
                                                  current_velocity)
-        steer = self.clamp(steer, -1.0, 1.0)
+        steer = self.lp_fiter(steer)
         return steer
 
     # Method to limit a value between min and max arguments
