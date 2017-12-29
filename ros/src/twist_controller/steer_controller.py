@@ -34,7 +34,7 @@ class Steer_Controller(object):
         steer = self.yaw_controller.get_steering(linear_velocity,
                                                  angular_velocity,
                                                  current_velocity)
-        steer = self.lp_fiter(steer)
+        steer = self.lp_fiter.filt(steer)
         return steer
 
     # Method to limit a value between min and max arguments
