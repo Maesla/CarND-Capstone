@@ -31,6 +31,8 @@ that we have created in the `__init__` function.
 
 '''
 
+RATE = 50
+
 class DBWNode(object):
     def __init__(self):
         rospy.init_node('dbw_node')
@@ -64,7 +66,7 @@ class DBWNode(object):
         # TODO: Create `TwistController` object
         # self.controller = TwistController(<Arguments you wish to provide>)
         self.controller = Controller()
-        self.controller.setup(vehicle_mass, fuel_capacity, wheel_radius,
+        self.controller.setup(RATE, vehicle_mass, fuel_capacity, wheel_radius,
                               decel_limit, wheel_base, steer_ratio,
                               max_lat_accel, min_speed, max_steer_angle) #WIP
         # TODO: Subscribe to all the topics you need to
@@ -77,20 +79,8 @@ class DBWNode(object):
         self.loop()
 
     def loop(self):
-        rate = rospy.Rate(50) # 50Hz
+        rate = rospy.Rate(RATE) # 50Hz
         while not rospy.is_shutdown():
-            # TODO: Get predicted throttle, brake, and steering using `twist_controller`
-            # You should only publish the control commands if dbw is enabled
-            # throttle, brake, steering = self.controller.control(<proposed linear velocity>,
-            #                                                     <proposed angular velocity>,
-            #                                                     <current linear velocity>,
-            #                                                     <dbw status>,
-            #                                                     <any other argument you need>)
-
-            throttle = 0.5
-            brake = 0.0
-            steer = 0.0;
-            # TODO, get this param from simulator, reset when  false
             if self.dbw_enabled:
 				throttle, brake, steer = self.calculate_values()
 				self.publish(throttle, brake, steer)
@@ -100,12 +90,10 @@ class DBWNode(object):
 
 
     def calculate_values(self):
-		cte_speed = self.target_speed - self.current_speed
-		cte_yaw = self.target_yaw - self.current_yaw
+		#speed_error = self.target_speed - self.current_speed
 
-		rospy.loginfo('Speed error %s', cte_speed)
-		return self.controller.control(cte_speed,
-                                       self.target_speed,
+		#rospy.loginfo('Speed error %s', speed_error)
+		return self.controller.control(self.target_speed,
                                        self.target_yaw,
                                        self.current_speed)
 
