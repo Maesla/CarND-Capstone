@@ -1,4 +1,91 @@
-This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
+
+### Final Capstone Project - Term 3 - Self Driving Car Engineer Nanodegree
+
+This is the project repo for the System Integration project of Term-3 Udacity Self-Driving Car Nanodegree.
+
+The Team:
+
+Manuel Espino Lara - espinolaramanuel@gmail.com - Team Lead <br />
+Veeken Chaglassian - veeken77@gmail.com  <br />
+Kyle Rector - kylearector@outlook.com  <br />
+Nathaniel Owen - chris@chrisowen.org  <br />
+Gary Lai - garylai2203@gmail.com  <br />
+
+
+Here we also give a brief explanation for nodes and code for waypoint_updater and tl_detector.
+
+
+
+
+### Objective
+
+The project involves writing ROS nodes to implement the core functionality of the autonmous vehicle system such as following waypoints in a set path, using traffic light detection and control. The code will run in the simulator and be submitted to run on Carla, which is Udacity's autonmous test mule.
+
+
+### Classification Model 
+
+We used several classification models to train the traffic light detector, namely the ssd-mobilenet and using the coco dataset for transfer learning. As well as experimenting with SqueezeNet, which gives a high level of accuracy with fewer parameters. 
+
+
+
+ssd-mobilenet:
+https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html
+
+ssd (Single-Shot-Multibox Detector) original paper:
+https://arxiv.org/abs/1512.02325
+
+MobileNet:
+https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md
+
+SqueezeNet orginal paper:
+https://arxiv.org/abs/1602.07360
+
+coco dataset:
+http://cocodataset.org/#home
+
+
+## Trafficlight detection - Single-Shot-Multibox Detector
+
+The SSD is easy to train and strightforward to integrate into systems that have a detection component. This model can handle images with different resolutions for our traffic lights, as we start looking at the traffic lights from 100m. 
+
+The traffic light detection node subsrcibes from 3 topics:
+1. /base_waypoints
+2. /current_pose
+3. /image_colour
+
+We use the vehicle's location and coordinates for traffic lights to find nearest visible traffic light ahead. The get_closest_waypoint does this by finding the closest waypoints to the vehicle and lights. This will determine which light is ahead of the vehicle.
+
+Next we use the camera and our SSD network to classify the colour of the traffic light. Once we have classified our traffic light, in case of a red light detection, the event along with the location of the nearest traffic light stopping zone ahead of the vehicle, is published to the /traffic_waypoint.
+
+Further details can be found in the code tl_classifier.py and tl_detector.py.
+
+### Waypoint Updater
+
+
+This waypoint updater is used for processing the many base points or nodes, that are static and retreiving a specific set of waypoints that represent the future set of points or nodes. The nodes may carry specific velocity values that account for any red lights that may have been detected by the car.
+
+To start we need to add a subscriber for /traffic_waypoint and /obstacle_waypoint. We start by having a ROS parameter called /lookforward_ to see how many waypoints are needed. The ROS parameter LOOKAHEAD_WPS controls how many waypoints are included in the horizon set. If the red traffic light is published to the /traffic_waypoint, a velocity is generated in order to slow down at a decelaration rate and stops at the waypoint. A parameter called MAX_DECEL controls and adjusts the deceleration rate, so if we would like the vehicle to stop braking sooner, we make the value lower, wich will caculate the velocity profile with a lower decceleration rate which in turn and we also have a set BRAKE_DISTANCE which can also be adjusted if we require a longer braking distance. 
+
+
+Further details can be found in waypoint_updater.py.
+
+## Braking
+
+For the slow gradual braking we looked at several mathematical functions to implement, that allows a slow gradual stop. In reality, we would not want an abrupt stop as that may cause discomfort or even injure the passengers inside. In particular we looked at the easeOutCubic function.
+
+Easing functions: (in Spanish)
+http://easings.net/es
+
+
+
+
+
+
+
+
+
+
+For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
 
 ### Native Installation
 
