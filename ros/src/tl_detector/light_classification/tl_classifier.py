@@ -25,7 +25,7 @@ def load_graph(frozen_graph_filename):
 
 
 class TLClassifier(object):
-    def __init__(self):
+    def __init__(self, model_path):
         self.tf_session = None
         self.predict = None
         self.clabels = [4, 2, 0, 1, 4, 4]
@@ -46,9 +46,6 @@ class TLClassifier(object):
         # using these feature set sepcs:
         # https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/using_your_own_dataset.md
 
-        ros_root = rospkg.get_ros_root()
-        r = rospkg.RosPack()
-        path = r.get_path('tl_detector')
         
         # set up tensorflow and traffic light classifier
         if self.tf_session is None:
@@ -56,7 +53,7 @@ class TLClassifier(object):
             self.config = tf.ConfigProto(log_device_placement=True)
             self.config.gpu_options.per_process_gpu_memory_fraction = 0.5  # don't hog all the VRAM!
             self.config.operation_timeout_in_ms = 50000 # terminate anything that don't return in 50 seconds
-            self.tf_graph = load_graph(path + '/light_classification/frozen_inference_graph_sim.pb')
+            self.tf_graph = load_graph(self.model_path + '.pb')
 
 
             with self.tf_graph.as_default():
