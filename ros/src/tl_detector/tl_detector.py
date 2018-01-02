@@ -17,6 +17,7 @@ STATE_COUNT_THRESHOLD = 3
 
 label = ['RED', 'YELLOW', 'GREEN', '', 'UNKNOWN']
 
+
 class TLDetector(object):
     def __init__(self):
         rospy.init_node('tl_detector')
@@ -27,13 +28,12 @@ class TLDetector(object):
         self.lights = []
         self.stopline_waypoints = []
         self.has_image = False
-        
-        #We thank John Chen's mentioning of this apprach in the slack channel #s_p-system-integrat 
+
+        # We thank John Chen's mentioning of this apprach in the slack channel #s_p-system-integrat
         self.path = rospy.get_param('~model_path')
         self.camera_topic = rospy.get_param('~camera_topic')
         ####
-        
-        
+
         self.sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         self.sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
@@ -61,10 +61,10 @@ class TLDetector(object):
 
         self.last_wp = -1
         self.state_count = 0
-		
-	#constrain the rate at which this node is processed to specified rate; ros::spin() would add unnecessary
-        #overhead given this node's purpose (see below)
-	#https://stackoverflow.com/questions/40508651/writing-a-ros-node-with-both-a-publisher-and-subscriber        
+
+        # constrain the rate at which this node is processed to specified rate; ros::spin() would add unnecessary
+        # overhead given this node's purpose (see below)
+        # https://stackoverflow.com/questions/40508651/writing-a-ros-node-with-both-a-publisher-and-subscriber
         self.updateRate = 8
         self.loop()
 
@@ -72,7 +72,7 @@ class TLDetector(object):
         rate = rospy.Rate(self.updateRate)
         while not rospy.is_shutdown():
 
-        # if following condtions met all required subcription callback functions have run
+            # if following condtions met all required subcription callback functions have run
             if self.pose and self.base_waypoints and self.has_image:
                 light_wp, state = self.process_traffic_lights()
                 '''
@@ -85,25 +85,25 @@ class TLDetector(object):
                     self.state_count = 0
                     self.state = state
                 elif self.state_count >= STATE_COUNT_THRESHOLD:
-                    #distinguish among cases (publish (-) values if GREEN or UNKNOWN)
+                    # distinguish among cases (publish (-) values if GREEN or UNKNOWN)
                     if state == TrafficLight.GREEN or state == TrafficLight.UNKNOWN:
                         light_wp = -1
-						
+
                     self.last_wp = light_wp
                     self.upcoming_light_pub.publish(Int32(light_wp))
-                    #for debug
+                    # for debug
                     print ("tl_detector state: ", Int32(light_wp))
                     print ("tl_detector state: ", state)
                     print ("tl_detector state: ", Int32(light_wp))
                     print ("tl_detector state: ", state)
-					
+
                 else:
                     self.upcoming_light_pub.publish(Int32(self.last_wp))
-				
+
                 self.state_count += 1
-		
+
             rate.sleep()
-			
+
     def pose_cb(self, msg):
         self.pose = msg
 
@@ -113,14 +113,13 @@ class TLDetector(object):
             for wp in msg.waypoints:
                 self.base_waypoints.append(wp)
 
-		
-        #only do this once since these values don't change
+        # only do this once since these values don't change
         self.sub2.unregister()
         rospy.loginfo('base_waypoints sub unregistered')
-	
+
         # initilize waypoints at which the car must stop if the light is red
-	self.initialize_stop_positions()
-		
+        self.initialize_stop_positions()
+
     def traffic_cb(self, msg):
         self.lights = msg.lights
 
@@ -135,28 +134,24 @@ class TLDetector(object):
         self.has_image = True
         self.camera_image = msg
 
-
     # Used for stop position waypoints
-    def create_pose_vector(self,x,y,z):
+    def create_pose_vector(self, x, y, z):
         wp = PoseStamped()
-	wp.pose.position.x = x
-	wp.pose.position.y = y
-	wp.pose.position.z = z
-	return wp
+        wp.pose.position.x = x
+        wp.pose.position.y = y
+        wp.pose.position.z = z
+        return wp
 
     def initialize_stop_positions(self):
-	# Returns waypoint indexes for each stop position
+        # Returns waypoint indexes for each stop position
         # List of positions that correspond to the line to stop in front of a a given intersection
         stop_line_positions = self.config['stop_line_positions']
-        
-        for i in range(len(stop_line_positions)):
-	    temp = self.create_pose_vector(stop_line_positions[i][0],stop_line_positions[i][1],0)
-	    index = self.get_closest_waypoint(temp.pose,self.base_waypoints,1e10)		
-	    self.stopline_waypoints.append(index)
-	
-		
 
-	
+        for i in range(len(stop_line_positions)):
+            temp = self.create_pose_vector(stop_line_positions[i][0], stop_line_positions[i][1], 0)
+            index = self.get_closest_waypoint(temp.pose, self.base_waypoints, 1e10)
+            self.stopline_waypoints.append(index)
+
     def get_pose_vector(self, pose):
         return np.asarray([pose.position.x, pose.position.y, pose.position.z], np.float32)
 
@@ -169,20 +164,18 @@ class TLDetector(object):
             dist: only for positions w/ distances less than 
 
         """
-        #TODO implement
+        # TODO implement
 
         index = None
-        for i,loc in enumerate(waypoints):
+        for i, loc in enumerate(waypoints):
             a = self.get_pose_vector(pose)
             b = self.get_pose_vector(loc.pose.pose)
-            temp = np.linalg.norm(a-b)
+            temp = np.linalg.norm(a - b)
             if dist > temp:
                 dist = temp
                 index = i
-				
-        return index
-        
 
+        return index
 
     def get_light_state(self):
         """Determines the current color of the traffic light
@@ -194,10 +187,10 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-        if(not self.has_image):
+        if (not self.has_image):
             return False
 
-        #We thank John Chen's mentioning of this apprach in the slack channel #s_p-system-integrat: 
+        # We thank John Chen's mentioning of this apprach in the slack channel #s_p-system-integrat:
         # fixing convoluted camera encoding...
         if hasattr(self.camera_image, 'encoding'):
             self.attribute = self.camera_image.encoding
@@ -206,13 +199,11 @@ class TLDetector(object):
         else:
             self.camera_image.encoding = 'rgb8'
         ####
-        
-        
+
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "rgb8")
 
-        #Get classification
+        # Get classification
         classification = self.light_classifier.get_classification(cv_image)
-
 
         return classification
 
@@ -226,20 +217,23 @@ class TLDetector(object):
 
         """
 
-
-        #TODO find the closest visible traffic light (if one exists)        
-        #***only check for lights within 100 meters***#
+        # TODO find the closest visible traffic light (if one exists)
+        # ***only check for lights within 100 meters***#
         tl_index = self.get_closest_waypoint(self.pose.pose, self.lights, 100)
-		
-        if tl_index is not None:
-            #next_wp = self.get_closest_waypoint(self.pose.pose, self.base_waypoints,100)
-            light_wp = self.get_closest_waypoint(self.lights[tl_index].pose.pose, self.base_waypoints,1e10)
-	    first_greater_than = next(i for i,v in enumerate(self.stopline_waypoints) if v > light_wp)
 
+        if tl_index is not None:
+            # next_wp = self.get_closest_waypoint(self.pose.pose, self.base_waypoints,100)
+            light_wp = self.get_closest_waypoint(self.lights[tl_index].pose.pose, self.base_waypoints, 1e10)
+            waypoints_greater = [i for i, v in enumerate(self.stopline_waypoints) if v > light_wp]
+            if len(waypoints_greater) > 0:
+                first_greater_than = waypoints_greater[0]
+            else:
+                first_greater_than = 1
             state = self.get_light_state()
-            return self.stopline_waypoints[first_greater_than-1], state		
+            return self.stopline_waypoints[first_greater_than - 1], state
         else:
-            return -1, TrafficLight.UNKNOWN 
+            return -1, TrafficLight.UNKNOWN
+
 
 if __name__ == '__main__':
     try:
