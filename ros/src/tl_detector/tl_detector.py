@@ -25,6 +25,7 @@ class TLDetector(object):
         self.base_waypoints = None
         self.camera_image = None
         self.lights = []
+        self.stopline_waypoints = []
         self.has_image = False
         
         #We thank John Chen's mentioning of this apprach in the slack channel #s_p-system-integrat 
@@ -85,9 +86,7 @@ class TLDetector(object):
                     self.state = state
                 elif self.state_count >= STATE_COUNT_THRESHOLD:
                     #distinguish among cases (publish (-) values if GREEN or UNKNOWN)
-                    if state == TrafficLight.GREEN:
-                        light_wp = -light_wp
-                    elif state == TrafficLight.UNKNOWN:
+                    if state == TrafficLight.GREEN or state == TrafficLight.UNKNOWN:
                         light_wp = -1
 						
                     self.last_wp = light_wp
@@ -113,12 +112,15 @@ class TLDetector(object):
             self.base_waypoints = []
             for wp in msg.waypoints:
                 self.base_waypoints.append(wp)
+
 		
         #only do this once since these values don't change
         self.sub2.unregister()
         rospy.loginfo('base_waypoints sub unregistered')
+	
+        # initilize waypoints at which the car must stop if the light is red
+	self.initialize_stop_positions()
 		
-
     def traffic_cb(self, msg):
         self.lights = msg.lights
 
@@ -133,6 +135,28 @@ class TLDetector(object):
         self.has_image = True
         self.camera_image = msg
 
+
+    # Used for stop position waypoints
+    def create_pose_vector(self,x,y,z):
+        wp = PoseStamped()
+	wp.pose.position.x = x
+	wp.pose.position.y = y
+	wp.pose.position.z = z
+	return wp
+
+    def initialize_stop_positions(self):
+	# Returns waypoint indexes for each stop position
+        # List of positions that correspond to the line to stop in front of a a given intersection
+        stop_line_positions = self.config['stop_line_positions']
+        
+        for i in range(len(stop_line_positions)):
+	    temp = self.create_pose_vector(stop_line_positions[i][0],stop_line_positions[i][1],0)
+	    index = self.get_closest_waypoint(temp.pose,self.base_waypoints,1e10)		
+	    self.stopline_waypoints.append(index)
+	
+		
+
+	
     def get_pose_vector(self, pose):
         return np.asarray([pose.position.x, pose.position.y, pose.position.z], np.float32)
 
@@ -173,9 +197,7 @@ class TLDetector(object):
         if(not self.has_image):
             return False
 
-        # Source:
-        #We thank John Chen's mentioning of this apprach in the slack channel #s_p-system-integrat 
-        
+        #We thank John Chen's mentioning of this apprach in the slack channel #s_p-system-integrat: 
         # fixing convoluted camera encoding...
         if hasattr(self.camera_image, 'encoding'):
             self.attribute = self.camera_image.encoding
@@ -204,18 +226,18 @@ class TLDetector(object):
 
         """
 
-        # List of positions that correspond to the line to stop in front of for a given intersection
-        # stop_line_positions = self.config['stop_line_positions']
-           
 
         #TODO find the closest visible traffic light (if one exists)        
         #***only check for lights within 100 meters***#
         tl_index = self.get_closest_waypoint(self.pose.pose, self.lights, 100)
 		
         if tl_index is not None:
-            light_wp = self.get_closest_waypoint(self.lights[tl_index].pose.pose, self.base_waypoints,1e10) 	
+            #next_wp = self.get_closest_waypoint(self.pose.pose, self.base_waypoints,100)
+            light_wp = self.get_closest_waypoint(self.lights[tl_index].pose.pose, self.base_waypoints,1e10)
+	    first_greater_than = next(i for i,v in enumerate(self.stopline_waypoints) if v > light_wp)
+
             state = self.get_light_state()
-            return light_wp, state		
+            return self.stopline_waypoints[first_greater_than-1], state		
         else:
             return -1, TrafficLight.UNKNOWN 
 
