@@ -5,11 +5,11 @@ This is the project repo for the System Integration project of Term-3 Udacity Se
 
 The Team:
 
-Manuel Espino Lara - espinolaramanuel@gmail.com - Team Lead
-Veeken Chaglassian - veeken77@gmail.com
-Kyle Rector - kylearector@outlook.com
-Nathaniel Owen - chris@chrisowen.org
-Gary Lai - garylai2203@gmail.com
+Manuel Espino Lara - espinolaramanuel@gmail.com - Team Lead <br />
+Veeken Chaglassian - veeken77@gmail.com  <br />
+Kyle Rector - kylearector@outlook.com  <br />
+Nathaniel Owen - chris@chrisowen.org  <br />
+Gary Lai - garylai2203@gmail.com  <br />
 
 
 Here we also give a brief explanation for nodes and code for waypoint_updater and tl_detector.
