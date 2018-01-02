@@ -52,7 +52,7 @@ class WaypointUpdater(object):
             if self.all_info_ready():
                 lane = Lane()
                 index_closest_waypoint = self.get_closest_waypoint_index()
-                rospy.logwarn("Current waypoint id is: {0}".format(index_closest_waypoint))
+                rospy.loginfo("Current waypoint id is: {0}".format(index_closest_waypoint))
                 last_index = index_closest_waypoint + LOOKAHEAD_WPS
                 ## To handle point wrapping.
                 looped_wp = False;
@@ -131,7 +131,7 @@ class WaypointUpdater(object):
         self.waypoints_length = len(self.waypoints)
 
     def traffic_cb(self, msg):
-        rospy.logwarn("Recieved message for waypoint {0}".format(msg.data))
+        rospy.loginfo("Recieved message for waypoint {0}".format(msg.data))
         self.traffic_light_pos = msg.data
 
     def obstacle_cb(self, msg):
