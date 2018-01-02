@@ -173,6 +173,8 @@ class WaypointUpdater(object):
             return -1, True
         if looped and traffic_index_local < start_index:
             traffic_index_local += self.waypoints_length
+        elif traffic_index_local < start_index:
+            return -1, True
         traffic_adjusted_index = traffic_index_local - start_index
         return traffic_adjusted_index, traffic_adjusted_index <= BRAKE_DISTANCE
 
