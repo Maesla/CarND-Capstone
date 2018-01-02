@@ -25,8 +25,14 @@ class TLDetector(object):
         self.base_waypoints = None
         self.camera_image = None
         self.lights = []
-        self.has_image = False 
-
+        self.has_image = False
+        
+        #We thank John Chen's mentioning of this apprach in the slack channel #s_p-system-integrat 
+        self.path = rospy.get_param('~model_path')
+        self.camera_topic = rospy.get_param('~camera_topic')
+        ####
+        
+        
         self.sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         self.sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
@@ -39,7 +45,7 @@ class TLDetector(object):
         '''
 
         self.sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        self.sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
+        self.sub6 = rospy.Subscriber(self.camera_topic, Image, self.image_cb)
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
@@ -47,7 +53,7 @@ class TLDetector(object):
         self.upcoming_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
-        self.light_classifier = TLClassifier()
+        self.light_classifier = TLClassifier(self.path)
         self.listener = tf.TransformListener()
 
         self.state = TrafficLight.UNKNOWN
@@ -64,7 +70,7 @@ class TLDetector(object):
     def loop(self):
         rate = rospy.Rate(self.updateRate)
         while not rospy.is_shutdown():
-	    rospy.logwarn(self.has_image)
+
         # if following condtions met all required subcription callback functions have run
             if self.pose and self.base_waypoints and self.has_image:
                 light_wp, state = self.process_traffic_lights()
@@ -84,13 +90,18 @@ class TLDetector(object):
                     elif state == TrafficLight.UNKNOWN:
                         light_wp = -1
 						
-                        self.last_wp = light_wp
-                        self.upcoming_light_pub.publish(Int32(light_wp))
+                    self.last_wp = light_wp
+                    self.upcoming_light_pub.publish(Int32(light_wp))
+                    #for debug
+                    print ("tl_detector state: ", Int32(light_wp))
+                    print ("tl_detector state: ", state)
+                    print ("tl_detector state: ", Int32(light_wp))
+                    print ("tl_detector state: ", state)
 					
-                    else:
-                        self.upcoming_light_pub.publish(Int32(self.last_wp))
+                else:
+                    self.upcoming_light_pub.publish(Int32(self.last_wp))
 				
-                    self.state_count += 1
+                self.state_count += 1
 		
             rate.sleep()
 			
@@ -123,7 +134,7 @@ class TLDetector(object):
         self.camera_image = msg
 
     def get_pose_vector(self, pose):
-        return np.asarray(pose.position.x, pose.position.y, pose.position.z)
+        return np.asarray([pose.position.x, pose.position.y, pose.position.z], np.float32)
 
     def get_closest_waypoint(self, pose, waypoints, dist):
         """Identifies the index of the given position within locactions if less than specified distance 
@@ -138,8 +149,8 @@ class TLDetector(object):
 
         index = None
         for i,loc in enumerate(waypoints):
-            a = get_pose_vector(pose)
-            b = get_pose_vector(loc.pose.pose)
+            a = self.get_pose_vector(pose)
+            b = self.get_pose_vector(loc.pose.pose)
             temp = np.linalg.norm(a-b)
             if dist > temp:
                 dist = temp
@@ -162,12 +173,25 @@ class TLDetector(object):
         if(not self.has_image):
             return False
 
+        # Source:
+        #We thank John Chen's mentioning of this apprach in the slack channel #s_p-system-integrat 
+        
+        # fixing convoluted camera encoding...
+        if hasattr(self.camera_image, 'encoding'):
+            self.attribute = self.camera_image.encoding
+            if self.camera_image.encoding == '8UC3':
+                self.camera_image.encoding = "rgb8"
+        else:
+            self.camera_image.encoding = 'rgb8'
+        ####
+        
+        
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "rgb8")
 
         #Get classification
         classification = self.light_classifier.get_classification(cv_image)
-        print ("tl_detector state: ", label[classification])
-        rospy.logwarn(label[classification])
+
+
         return classification
 
     def process_traffic_lights(self):
@@ -181,11 +205,11 @@ class TLDetector(object):
         """
 
         # List of positions that correspond to the line to stop in front of for a given intersection
-        #stop_line_positions = self.config['stop_line_positions']
+        # stop_line_positions = self.config['stop_line_positions']
            
 
         #TODO find the closest visible traffic light (if one exists)        
-        # only check for lights within 100 meters
+        #***only check for lights within 100 meters***#
         tl_index = self.get_closest_waypoint(self.pose.pose, self.lights, 100)
 		
         if tl_index is not None:
