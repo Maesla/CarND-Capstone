@@ -66,6 +66,8 @@ This waypoint updater is used for processing the many base points or nodes, that
 
 To start we need to add a subscriber for /traffic_waypoint and /obstacle_waypoint. We start by having a ROS parameter called /lookforward_ to see how many waypoints are needed. The ROS parameter LOOKAHEAD_WPS controls how many waypoints are included in the horizon set. If the red traffic light is published to the /traffic_waypoint, a velocity is generated in order to slow down at a decelaration rate and stops at the waypoint. A parameter called MAX_DECEL controls and adjusts the deceleration rate, so if we would like the vehicle to stop braking sooner, we make the value lower, wich will caculate the velocity profile with a lower decceleration rate which in turn and we also have a set BRAKE_DISTANCE which can also be adjusted if we require a longer braking distance. 
 
+As in the Path Planning project, acceleration should not exceed 10 m/s^2 and jerk should not exceed 10 m/s^3.
+
 
 Further details can be found in waypoint_updater.py.
 
@@ -77,12 +79,19 @@ Easing functions: (in Spanish)
 http://easings.net/es
 
 
+### Drive-By-Wire Node
+
+The DBW node is responsible for publishing throttle, brake and steering set-point values for the car's lower level control system to execute. 
+The dbw_node.py publishes steering, throttle, and brake commands at 50hz. 
+Most of the node has been kept as simple as possible in order to help with the debugging and feature development that is likely to occur as real-world testing commences. 
 
 
+### Known Issues 
 
+Around two thirds of the track, around waypoint 6000 the car starts to behave more erratically. As the car's throttle suddenly goes far too high when accelerating from the traffic lights. This may be due to system resource allocation, reading on forums and on slack, we are not the only ones with this issue. 
 
-
-
+There was an issue with the traffic light detection as the lights images taken from the camera may be too small (literally a few pixels wide).
+Recent updates to TensorFlow last month may have also introduced some bugs, but using the older version of would barely classify the traffic light at 0.57 (threshold is 0.5)
 
 
 For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
