@@ -65,7 +65,7 @@ class TLDetector(object):
         # constrain the rate at which this node is processed to specified rate; ros::spin() would add unnecessary
         # overhead given this node's purpose (see below)
         # https://stackoverflow.com/questions/40508651/writing-a-ros-node-with-both-a-publisher-and-subscriber
-        self.updateRate = 8
+        self.updateRate = 10
         self.loop()
 
     def loop(self):
@@ -144,7 +144,7 @@ class TLDetector(object):
 
     def initialize_stop_positions(self):
         # Returns waypoint indexes for each stop position
-        # List of positions that correspond to the line to stop in front of a a given intersection
+        # List of positions that correspond to the line to stop in front of at a given intersection
         stop_line_positions = self.config['stop_line_positions']
 
         for i in range(len(stop_line_positions)):
@@ -156,12 +156,12 @@ class TLDetector(object):
         return np.asarray([pose.position.x, pose.position.y, pose.position.z], np.float32)
 
     def get_closest_waypoint(self, pose, waypoints, dist):
-        """Identifies the index of the given position within locactions if less than specified distance 
+        """Identifies the index of the given position within waypoints if less than specified distance 
             https://en.wikipedia.org/wiki/Closest_pair_of_points_problem
         Args:
             pose (Pose): position to match a waypoint to
-            locations: ordered list of waypoints (either track waypoints or traffic lights waypoints)
-            dist: only for positions w/ distances less than 
+            waypoints: ordered list of waypoints (either track waypoints or traffic lights waypoints)
+            dist: only for positions w/ distances less than this value
 
         """
         # TODO implement
@@ -222,13 +222,12 @@ class TLDetector(object):
         tl_index = self.get_closest_waypoint(self.pose.pose, self.lights, 100)
 
         if tl_index is not None:
-            # next_wp = self.get_closest_waypoint(self.pose.pose, self.base_waypoints,100)
             light_wp = self.get_closest_waypoint(self.lights[tl_index].pose.pose, self.base_waypoints, 1e10)
             waypoints_greater = [i for i, v in enumerate(self.stopline_waypoints) if v > light_wp]
             if len(waypoints_greater) > 0:
                 first_greater_than = waypoints_greater[0]
             else:
-                first_greater_than = 1
+                first_greater_than = len(self.stopline_waypoints)
             state = self.get_light_state()
             return self.stopline_waypoints[first_greater_than - 1], state
         else:
