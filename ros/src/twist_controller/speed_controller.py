@@ -40,7 +40,7 @@ class Speed_Controller(object):
         brake = 0
         if (speed_error >= 0):
             throttle = self.throttle_pid.step(speed_error, self.dt)
-            throttle = self.clamp(throttle, 0.0,0.33)
+            throttle = self.clamp(throttle, 0.0,1.0)
         else:
 			acc = speed_error/self.dt
 			brake = self.calculate_brake(self.total_mass, acc, self.wheel_radius)
