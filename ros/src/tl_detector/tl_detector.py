@@ -91,12 +91,7 @@ class TLDetector(object):
 
                     self.last_wp = light_wp
                     self.upcoming_light_pub.publish(Int32(light_wp))
-                    # for debug
-                    print ("tl_detector state: ", Int32(light_wp))
-                    print ("tl_detector state: ", state)
-                    print ("tl_detector state: ", Int32(light_wp))
-                    print ("tl_detector state: ", state)
-
+                    
                 else:
                     self.upcoming_light_pub.publish(Int32(self.last_wp))
 
@@ -130,7 +125,6 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
-        rospy.logwarn('image received by tl_detector node')
         self.has_image = True
         self.camera_image = msg
 
@@ -190,7 +184,7 @@ class TLDetector(object):
         if (not self.has_image):
             return False
 
-        # We thank John Chen's mentioning of this apprach in the slack channel #s_p-system-integrat:
+        # We thank John Chen's mentioning of this approach in the slack channel #s_p-system-integrat:
         # fixing convoluted camera encoding...
         if hasattr(self.camera_image, 'encoding'):
             self.attribute = self.camera_image.encoding
