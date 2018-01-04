@@ -92,5 +92,5 @@ class TLClassifier(object):
             if cc > 0 and cc < 4 and confidence is not None and confidence > THRESHOLD:
                 c = cc
                 predict = self.clabels[c]
-            print('Confidence of state prediction: ', confidence)
+
         return predict

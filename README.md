@@ -24,7 +24,8 @@ The project involves writing ROS nodes to implement the core functionality of th
 
 ### Classification Model 
 
-We used several classification models to train the traffic light detector, namely the ssd-mobilenet and using the coco dataset for transfer learning. As well as experimenting with SqueezeNet, which gives a high level of accuracy with fewer parameters. 
+We experimented with several classification models to train the traffic light detector. Transfer learning with the coco dataset on a SSD-mobilenet graph was our final choice, in part because it is relatvely small as deep learning models go, a valid consideration when working with the hardware mounted in an car, in part because we had good annotated data to work for such a model (please see comments in code for references), and in part because we could hook it up to the Tensorflow object detection API with ease (not strictly necessary to do so, but still convenient).
+We also created new datasets of our own (in contract to what the TF API expected) and experimented with perhaps the most parsimonious of all conv net architectures, SqueezeNet (AlexNet-level accuracy with 50x fewer parameters and <0.5MB model size). While we achieved high levels of accuracy >97% on the validation set, testing on sim data was incomplete (for we'd have to generate new data sets here as well) and we didnt want to use the model without further testing. 
 
 
 
@@ -89,9 +90,6 @@ Most of the node has been kept as simple as possible in order to help with the d
 ### Known Issues 
 
 Around two thirds of the track, around waypoint 6000 the car starts to behave more erratically. As the car's throttle suddenly goes far too high when accelerating from the traffic lights. This may be due to system resource allocation, reading on forums and on slack, we are not the only ones with this issue. 
-
-There was an issue with the traffic light detection as the lights images taken from the camera may be too small (literally a few pixels wide).
-Recent updates to TensorFlow last month may have also introduced some bugs, but using the older version of would barely classify the traffic light at 0.57 (threshold is 0.5)
 
 
 For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
