@@ -64,7 +64,7 @@ class WaypointUpdater(object):
                 else:
                     waypoints = self.waypoints[index_closest_waypoint:last_index]
                 brake_wp, brake = self.check_brake_distance(index_closest_waypoint, last_index, looped_wp)
-                for i in range(LOOKAHEAD_WPS):
+                for i in range(len(waypoints)):
                     self.set_waypoint_velocity(waypoints, i, self.velocity)
                 if brake:
                     self.decelerate(waypoints,0, brake_wp)
