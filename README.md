@@ -25,7 +25,7 @@ The project involves writing ROS nodes to implement the core functionality of th
 ### Classification Model 
 
 We experimented with several classification models to train the traffic light detector. Transfer learning with the coco dataset on a SSD-mobilenet graph was our final choice, in part because it is relatvely small as deep learning models go, a valid consideration when working with the hardware mounted in an car, in part because we had good annotated data to work for such a model (please see comments in code for references), and in part because we could hook it up to the Tensorflow object detection API with ease (not strictly necessary to do so, but still convenient).
-We also created new datasets of our own (for the Tensorflow API expected the data to be annotated) and experimented with perhaps the most parsimonious of all conv net architectures, SqueezeNet (AlexNet-level accuracy with 50x fewer parameters and <0.5MB model size). While we achieved high levels of accuracy >97% on the validation set, testing on sim data was incomplete (for we'd have to generate new data sets here as well) and we didnt want to use the model without further testing. 
+We also created new datasets of our own (in contract to what the TF API expected) and experimented with perhaps the most parsimonious of all conv net architectures, SqueezeNet (AlexNet-level accuracy with 50x fewer parameters and <0.5MB model size). While we achieved high levels of accuracy >97% on the validation set, testing on sim data was incomplete (for we'd have to generate new data sets here as well) and we didnt want to use the model without further testing. 
 
 
 
