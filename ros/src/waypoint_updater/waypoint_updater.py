@@ -47,7 +47,7 @@ class WaypointUpdater(object):
         self.update()
 
     def update(self):
-        rate = rospy.Rate(10)  # 10hz
+        rate = rospy.Rate(2)  # 2hz
         while not rospy.is_shutdown():
             if self.all_info_ready():
                 lane = Lane()
