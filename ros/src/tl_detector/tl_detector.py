@@ -65,7 +65,7 @@ class TLDetector(object):
         # constrain the rate at which this node is processed to specified rate; ros::spin() would add unnecessary
         # overhead given this node's purpose (see below)
         # https://stackoverflow.com/questions/40508651/writing-a-ros-node-with-both-a-publisher-and-subscriber
-        self.updateRate = 10
+        self.updateRate = 8
         self.loop()
 
     def loop(self):

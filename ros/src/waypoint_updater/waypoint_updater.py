@@ -26,7 +26,7 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 LOOKAHEAD_WPS = 200  # Number of waypoints we will publish. You can change this number
 MAX_DECEL = 1.0  # Maximum Deceleration value
 BRAKE_DISTANCE = 30  # distance to begin slowing down
-MAX_ACCEL = 0.3  # Maximum Acceleration value
+MAX_ACCEL = 2  # Maximum Acceleration value
 
 
 class WaypointUpdater(object):
@@ -51,7 +51,7 @@ class WaypointUpdater(object):
         self.update()
 
     def update(self):
-        rate = rospy.Rate(1)  # 2hz
+        rate = rospy.Rate(2)  # 2hz
         while not rospy.is_shutdown():
             self.update_impl()
             rate.sleep()
@@ -74,8 +74,7 @@ class WaypointUpdater(object):
             else:
                 waypoints = self.waypoints[index_closest_waypoint:last_index]
             brake_wp, brake = self.check_brake_distance(index_closest_waypoint, last_index, looped_wp)
-            for i in range(len(waypoints)):
-                self.set_waypoint_velocity(waypoints, i, self.velocity)
+            self.accelerate_to_target(waypoints)
             if brake:
                 self.decelerate(waypoints, 0, brake_wp)
             lane.waypoints = waypoints
@@ -83,6 +82,11 @@ class WaypointUpdater(object):
 
     def all_info_ready(self):
         return self.yaw is not None and self.waypoints is not None and self.current_vel is not None
+
+    def accelerate_to_target(self, waypoints):
+        for i in range(len(waypoints)):
+            set_vel = min(self.current_vel + (i+1) * MAX_ACCEL, self.velocity)
+            self.set_waypoint_velocity(waypoints, i, set_vel)
 
     def pose_cb(self, msg):
         self.current_pose = msg
@@ -140,9 +144,10 @@ class WaypointUpdater(object):
         self.waypoints_length = len(self.waypoints)
 
     def traffic_cb(self, msg):
+        changed = self.traffic_light_pos is not msg.data
         self.traffic_light_pos = msg.data
-        if self.traffic_light_pos is not -1:
-            rospy.loginfo("Recieved red light for waypoint {0}".format(self.traffic_light_pos))
+        if self.traffic_light_pos is not -1 or changed:
+            rospy.loginfo("Received light for waypoint {0}".format(self.traffic_light_pos))
             self.update_impl()
 
     def obstacle_cb(self, msg):
